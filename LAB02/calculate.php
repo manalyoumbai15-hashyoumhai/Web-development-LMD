@@ -1,53 +1,78 @@
 <?php
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['course'])) {
-    $courses = $_POST['course'];
-    $credits = $_POST['credits'];
-    $grades = $_POST['grade'];
 
-    $totalPoints = 0;
-    $totalCredits = 0;
-    $tableHtml = "<table border='1' style='width:100%; border-collapse:collapse;'>
-                    <tr><th>المادة</th><th>الساعات</th><th>النقاط</th></tr>";
+if (isset($_POST['course'], $_POST['credits'], $_POST['grade'])) {
 
-    for ($i = 0; $i < count($courses); $i++) {
-        $cr = floatval($credits[$i]);
-        $gr = floatval($grades[$i]);
-        $pts = $cr * $gr;
+$courses = $_POST['course'];
+$credits = $_POST['credits'];
+$grades = $_POST['grade'];
 
-        $totalPoints += $pts;
-        $totalCredits += $cr;
+$totalPoints = 0;
+$totalCredits = 0;
 
-        $tableHtml .= "<tr>
-                        <td>" . htmlspecialchars($courses[$i]) . "</td>
-                        <td>$cr</td>
-                        <td>$pts</td>
-                      </tr>";
-    }
-    $tableHtml .= "</table>";
+echo "<table>";
 
-    if ($totalCredits > 0) {
-        $gpa = $totalPoints / $totalCredits;
-        
-        // تحديد التقدير
-        if ($gpa >= 3.7) $interpretation = "Distinction";
-        elseif ($gpa >= 3.0) $interpretation = "Merit";
-        elseif ($gpa >= 2.0) $interpretation = "Pass";
-        else $interpretation = "Fail";
+echo "<tr>
+<th>Course</th>
+<th>Credits</th>
+<th>Grade</th>
+<th>Grade Points</th>
+</tr>";
 
-        $message = "Your GPA is " . number_format($gpa, 2) . " ($interpretation).";
+for ($i = 0; $i < count($courses); $i++) {
 
-        // إرسال الرد بصيغة JSON
-        echo json_encode([
-            'success' => true,
-            'gpa' => number_format($gpa, 2),
-            'message' => $message,
-            'tableHtml' => $tableHtml
-        ]);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'بيانات غير صالحة']);
-    }
-} else {
-    echo json_encode(['success' => false, 'message' => 'لم يتم استلام بيانات']);
+$course = htmlspecialchars($courses[$i]);
+$cr = floatval($credits[$i]);
+$g = floatval($grades[$i]);
+
+if ($cr <= 0) continue;
+
+$pts = $cr * $g;
+
+$totalPoints += $pts;
+$totalCredits += $cr;
+
+echo "<tr>
+<td>$course</td>
+<td>$cr</td>
+<td>$g</td>
+<td>$pts</td>
+</tr>";
+
 }
-exit;
+
+echo "</table>";
+
+if ($totalCredits > 0) {
+
+$gpa = $totalPoints / $totalCredits;
+
+if ($gpa >= 3.7) {
+$interpretation = "Distinction";
+}
+elseif ($gpa >= 3.0) {
+$interpretation = "Merit";
+}
+elseif ($gpa >= 2.0) {
+$interpretation = "Pass";
+}
+else {
+$interpretation = "Fail";
+}
+
+echo "<p>Your GPA is <strong>" . number_format($gpa,2) . "</strong> ($interpretation).</p>";
+
+}
+else {
+
+echo "<p>No valid courses entered.</p>";
+
+}
+
+}
+else {
+
+echo "Data not received.";
+
+}
+
 ?>
